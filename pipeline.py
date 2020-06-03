@@ -179,7 +179,7 @@ class TrainGANPipeline:
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
 
-            noise_to_generate = np.random.rand((config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
+            noise_to_generate = np.random.rand(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM)
             label_stack = np.random.uniform(low=0.0, high=0.4,
                                             size=(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
 
@@ -188,6 +188,9 @@ class TrainGANPipeline:
 
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
+                generated_images = self.GAN.get_generated_images(10)
+                generated_images = np.uint8(generated_images*255.0)
+                wandb.log({"examples": [wandb.Image(image, caption=str(idx)) for idx,image in enumerate(generated_images)], "step":step})
                 self.generator.on_epoch_end()
 
             step += 1
