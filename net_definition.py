@@ -7,7 +7,7 @@ from tensorflow.keras.layers import (
     Flatten, Reshape, Activation, UpSampling2D)
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import RMSprop
-
+import numpy as np
 import config
 
 
@@ -83,7 +83,7 @@ class GAN:
         return tensor
 
     def initialize_gen(self):
-        generator_input_noise = Input(shape=100, )
+        generator_input_noise = Input(shape=config.INPUT_GENERATOR_NOISE_DIM, )
         gen = Dense(8 * 8 * 256)(generator_input_noise)
         gen = BatchNormalization(momentum=0.0)(gen)
         gen = Activation('relu')(gen)
@@ -114,9 +114,8 @@ class GAN:
 
     def initialize_adversarial(self):
 
-        self.adversarial = Sequential()
-        self.adversarial.add(self.generator)
-        self.adversarial.add(self.discriminator)
+        adversarial = self.discrimiator(self.generator)
+        self.adversarial = Model(inputs=self.generator.input,outputs=adversarial.output)
         optimizer = RMSprop(lr=config.INITIAL_ADVERSARIAL_LEARNING_RATE, clipvalue=config.ADVERSARIAL_CLIP_VALUE,
                             decay=config.ADVERSARIAL_DECAY)
         self.adversarial.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
@@ -131,3 +130,9 @@ class GAN:
         self.discrimiator.trainable = False
         for layer in self.discrimiator.layers:
             layer.trainable = False
+
+    def get_generated_images(self,batch_size=config.BATCH_SIZE):
+
+        input_array = np.random.rand(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM)
+        generated_images = self.generator.predict(input_array)
+        return generated_images
