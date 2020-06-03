@@ -49,7 +49,6 @@ class GAN:
 
     def initialize_disc(self):
 
-        input_image_tensor = Input(shape=(config.IMAGE_HEIGHT, config.IMAGE_WIDTH, config.IMAGE_CHANNELS))
         pt_model = self.create_base_model()
         mod_out = Conv2D(filters=64, kernel_size=1, padding='same', activation='relu')(pt_model.output)
         mod_out = MaxPooling2D(2)(mod_out)
@@ -57,7 +56,7 @@ class GAN:
         mod_out = Dense(32, activation='relu')(mod_out)
         mod_out = Dense(1, activation='sigmoid')(mod_out)
 
-        self.discrimiator = Model(inputs=input_image_tensor, outputs=mod_out)
+        self.discrimiator = Model(inputs=pt_model.input, outputs=mod_out)
         adam = RMSprop(lr=config.INITIAL_DISCRIMINATOR_LEARNING_RATE, clipvalue=config.DISCRIMINATOR_CLIP_VALUE,
                        decay=config.DISCRIMINATOR_DECAY)
 
