@@ -1,14 +1,17 @@
 import json
-import random
 import os
+import random
+
 import numpy as np
+import wandb
 from skimage.io import imread
 from skimage.transform import resize
 from skimage.util.dtype import img_as_float
 from tensorflow import keras
 from tqdm import tqdm
+
 import config
-import wandb
+
 w_run = wandb.init(project="OpenSourceGAN")
 
 
@@ -75,12 +78,22 @@ class GANDataGenerator(keras.utils.Sequence):
 
         return sampled_images_list, labels
 
+    def get_next_item(self):
+        items = self.__getitem__(self.index)
+        self.index += 1
+
+        #Safety
+        self.index = self.index % self.__len__()
+
+        return items
+
     def preprocess_frame(self, frame):
         frame = img_as_float(frame)
         return frame
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
+        self.index = 0
         self.indexes = np.arange(len(self.training_dictionary.keys()))
         if self.shuffle == True:
             np.random.shuffle(self.indexes)
@@ -101,7 +114,7 @@ class TrainGANPipeline:
 
         for key in tqdm(keys):
             filename = self.IMAGE_BBOX_DICT[key]['filepath']
-            if(os.path.exists(filename)):
+            if (os.path.exists(filename)):
                 continue
             else:
                 self.IMAGE_BBOX_DICT.pop(key)
@@ -116,23 +129,23 @@ class TrainGANPipeline:
         self.GAN.set_discriminator_trainable()
         step = 0
 
-        print ("INITIAL DISCRIMINATOR TRAINING...............")
+        print("INITIAL DISCRIMINATOR TRAINING...............")
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
-            generated_labels = np.random.uniform(low=0.0,high=0.4,size=(len(generated_images),1))
+            generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
 
-            discriminator_images, discriminator_labels = next(self.generator)
+            discriminator_images, discriminator_labels = self.generator.get_next_item()
             image_stack = np.vstack((generated_images, discriminator_images))
-            label_stack = np.vstack((generated_labels,discriminator_labels))
+            label_stack = np.vstack((generated_labels, discriminator_labels))
 
-            disc_loss = self.GAN.discrimiator.train_on_batch(image_stack,label_stack)
+            disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
 
-            wandb.log({'disc_initial_loss':disc_loss, 'step': step})
+            wandb.log({'disc_initial_loss': disc_loss, 'step': step})
             if not (step % len(self.generator)):
-                print ("Step {} of {}".format(step,config.NUM_DISCRIMINATOR_STEPS))
+                print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
                 self.generator.on_epoch_end()
 
-            step+=1
+            step += 1
 
     def train_GAN(self):
 
@@ -140,14 +153,14 @@ class TrainGANPipeline:
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
 
-            #Train Discriminator
+            # Train Discriminator
 
             self.GAN.set_discriminator_trainable()
 
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
 
-            discriminator_images, discriminator_labels = next(self.generator)
+            discriminator_images, discriminator_labels = self.generator.get_next_item()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
             # Add noise to label_stack by flipping very few labels to reduce mode collapse probability
@@ -158,13 +171,13 @@ class TrainGANPipeline:
 
             wandb.log({'disc_loss': disc_loss, 'step': step})
 
-            #Freeze Discriminator and train the adversarial model
+            # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
 
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
 
-            discriminator_images, discriminator_labels = next(self.generator)
+            discriminator_images, discriminator_labels = self.generator.get_next_item()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
@@ -172,12 +185,8 @@ class TrainGANPipeline:
 
             wandb.log({'adv_loss': adv_loss, 'step': step})
 
-
             if not (step % len(self.generator)):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
                 self.generator.on_epoch_end()
 
-            step+=1
-
-
-
+            step += 1
