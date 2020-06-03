@@ -101,7 +101,7 @@ class GAN:
         gen = GaussianNoise(0.01)(gen)
         gen = self.upsample_bank(filters=8, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 256,256,8
 
-        gen = Conv2D(3, 1, activation='sigmoid')(gen)
+        gen = Conv2D(3, 1, activation='sigmoid')(gen) #Shape = 256,256,3
 
         self.generator = Model(inputs=generator_input_noise, outputs=gen)
 

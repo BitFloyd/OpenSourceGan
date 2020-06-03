@@ -174,14 +174,10 @@ class TrainGANPipeline:
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
 
-            generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
-            generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
+            noise_to_generate = np.random.rand((config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
+            label_stack = np.random.uniform(low=0.0,high=0.4,size=(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
 
-            discriminator_images, discriminator_labels = self.generator.get_next_item()
-            image_stack = np.vstack((generated_images, discriminator_images))
-            label_stack = np.vstack((generated_labels, discriminator_labels))
-
-            adv_loss = self.GAN.adversarial.train_on_batch(image_stack, label_stack)
+            adv_loss = self.GAN.adversarial.train_on_batch(noise_to_generate, label_stack)
 
             wandb.log({'adv_loss': adv_loss, 'step': step})
 
