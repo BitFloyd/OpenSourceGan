@@ -21,7 +21,7 @@ class GANDataGenerator(keras.utils.Sequence):
         """
         self.training_dictionary = training_dictionary
         self.keys = list(self.training_dictionary.keys())
-        self.num_training_images = len(keys)
+        self.num_training_images = len(self.keys)
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.on_epoch_end()
