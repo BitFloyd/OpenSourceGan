@@ -6,7 +6,7 @@ import sys
 
 import wget
 from fuzzywuzzy import process
-from urllib.error import HTTPError
+from urllib.error import HTTPError,  URLError
 import config
 
 
@@ -135,3 +135,9 @@ def download_func(in_queue):
             except HTTPError:
                 print("Could not download ", cmd[0])
                 continue
+            except URLError:
+                in_queue.put(cmd)
+                #Will be processed later.
+                continue
+
+
