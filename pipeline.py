@@ -21,14 +21,14 @@ class GANDataGenerator(keras.utils.Sequence):
         """
         self.training_dictionary = training_dictionary
         self.keys = list(self.training_dictionary.keys())
-        self.num_training_images = len(training_dictionary.keys())
+        self.num_training_images = len(keys)
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.on_epoch_end()
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-        num_batches = int(np.floor(self.num_training_files / self.batch_size))
+        num_batches = int(np.floor(self.num_training_images / self.batch_size))
         print("NUMBER_OF_BATCHS:", num_batches)
         return num_batches
 
