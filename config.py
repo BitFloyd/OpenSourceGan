@@ -1,5 +1,5 @@
 import os
-HOME = os.getenv(PROJECT_BASE_PATH,'/Users/sebyjacob/My_Projects/OpenSourceGAN')
+HOME = os.getenv('PROJECT_BASE_PATH','/Users/sebyjacob/My_Projects/OpenSourceGAN')
 IMAGE_METADATA_FOLDER = os.path.join(HOME,'OpenImagesV6/image_metadata')
 IMAGE_CLASS_DESCRIPTIONS_FILE = os.path.join(IMAGE_METADATA_FOLDER, 'oidv6-class-descriptions.csv')
 TRAIN_BBOX_ANNOTATIONS_FILE = os.path.join(IMAGE_METADATA_FOLDER, 'oidv6-train-annotations-bbox.csv')
