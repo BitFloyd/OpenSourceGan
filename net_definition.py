@@ -114,7 +114,7 @@ class GAN:
 
     def initialize_adversarial(self):
 
-        adversarial = self.discrimiator(self.generator)
+        adversarial = self.discrimiator(self.generator.output)
         self.adversarial = Model(inputs=self.generator.input,outputs=adversarial.output)
         optimizer = RMSprop(lr=config.INITIAL_ADVERSARIAL_LEARNING_RATE, clipvalue=config.ADVERSARIAL_CLIP_VALUE,
                             decay=config.ADVERSARIAL_DECAY)
