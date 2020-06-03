@@ -1,3 +1,4 @@
 from pipeline import TrainGANPipeline
 
-TrainGANPipeline.train_GAN()
+pipeline = TrainGANPipeline()
+pipeline.train_GAN()
