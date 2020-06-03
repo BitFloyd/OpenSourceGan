@@ -6,7 +6,7 @@ from skimage.io import imread
 from skimage.transform import resize
 from skimage.util.dtype import img_as_float
 from tensorflow import keras
-
+from tqdm import tqdm
 import config
 import wandb
 w_run = wandb.init(project="OpenSourceGAN")
@@ -99,7 +99,7 @@ class TrainGANPipeline:
         print("DOING A SANITY CHECK TO ONLY KEEP IMAGES WE HAVE SUCCESSFULLY DOWNLOADED")
         keys = list(self.IMAGE_BBOX_DICT.keys())
 
-        for key in keys:
+        for key in tqdm(keys):
             filename = self.IMAGE_BBOX_DICT[key]['filepath']
             try:
                 imread(filename)
