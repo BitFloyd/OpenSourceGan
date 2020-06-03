@@ -56,7 +56,7 @@ class GAN:
 
         input_image_tensor = Input(shape=(config.IMAGE_HEIGHT, config.IMAGE_WIDTH, config.IMAGE_CHANNELS))
         pt_model = self.create_base_model()
-        mod_out = Conv2D(filters=64, kernel_size=1, padding='same', activation='relu')(pt_model.out)
+        mod_out = Conv2D(filters=64, kernel_size=1, padding='same', activation='relu')(pt_model.output)
         mod_out = MaxPooling2D(2)(mod_out)
         mod_out = Flatten()(mod_out)
         mod_out = Dense(32, activation='relu')(mod_out)
