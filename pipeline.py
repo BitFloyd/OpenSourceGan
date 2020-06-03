@@ -162,8 +162,8 @@ class TrainGANPipeline:
                 self.generator.on_epoch_end()
                 epoch +=1
 
-                model_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH,'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
-                self.GAN.discrimiator.save_model(model_save_path)
+                disc_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH,'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
+                self.GAN.discrimiator.save(disc_save_path)
             step += 1
 
     def train_GAN(self):
@@ -209,9 +209,9 @@ class TrainGANPipeline:
 
                 epoch+=1
                 discriminator_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
-                self.GAN.discrimiator.save_model(discriminator_save_path)
+                self.GAN.discrimiator.save(discriminator_save_path)
                 generator_save_path = os.path.join(GENERATOR_SAVE_PATH,'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
-                self.GAN.generator.save_model(generator_save_path)
+                self.GAN.generator.save(generator_save_path)
 
 
 
