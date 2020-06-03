@@ -1,6 +1,6 @@
 import json
 import random
-
+import os
 import numpy as np
 from skimage.io import imread
 from skimage.transform import resize
@@ -88,11 +88,11 @@ class GANDataGenerator(keras.utils.Sequence):
 
 class TrainGANPipeline:
 
-    def __init__(self, GAN):
+    def __init__(self, GAN, interested_class='Furniture'):
 
         self.GAN = GAN
 
-        with open(config.IMAGES_DICT_FOR_LABEL_META, 'r') as f:
+        with open(os.path.join(config.IMAGES_DICT_FOR_LABEL_META, interested_class + '_images_dict.json'), 'r') as f:
             self.IMAGE_BBOX_DICT = json.load(f)
 
         # Do a sanity check and pop the imageIDs that we cannot read.
