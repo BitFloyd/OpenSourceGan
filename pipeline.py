@@ -97,7 +97,9 @@ class TrainGANPipeline:
 
         # Do a sanity check and pop the imageIDs that we cannot read.
         print("DOING A SANITY CHECK TO ONLY KEEP IMAGES WE HAVE SUCCESSFULLY DOWNLOADED")
-        for key in self.IMAGE_BBOX_DICT:
+        keys = self.IMAGE_BBOX_DICT.keys()
+
+        for key in keys:
             filename = self.IMAGE_BBOX_DICT[key]['filepath']
             try:
                 imread(filename)
