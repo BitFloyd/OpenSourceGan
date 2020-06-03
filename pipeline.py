@@ -14,6 +14,16 @@ import config
 
 w_run = wandb.init(project="OpenSourceGAN")
 
+interested_class = 'Furniture'
+GAN_SAVE_DIR = os.path.join(config.HOME, 'GANS', interested_class)
+
+if (not os.path.exists(GAN_SAVE_DIR)):
+    os.makedirs(GAN_SAVE_DIR, exist_ok=True)
+
+GENERATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'generator')
+os.makedirs(GENERATOR_SAVE_PATH, exist_ok=True)
+DISCRIMINATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'discriminator')
+os.makedirs(DISCRIMINATOR_SAVE_PATH, exist_ok=True)
 
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -135,7 +145,7 @@ class TrainGANPipeline:
     def train_Discriminator(self):
         self.GAN.set_discriminator_trainable()
         step = 0
-
+        epoch = 0
         print("INITIAL DISCRIMINATOR TRAINING...............")
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
@@ -150,12 +160,16 @@ class TrainGANPipeline:
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
                 self.generator.on_epoch_end()
+                epoch +=1
 
+                model_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH,'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
+                self.GAN.discrimiator.save_model(model_save_path)
             step += 1
 
     def train_GAN(self):
 
         step = 0
+        epoch = 0
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
 
@@ -192,5 +206,14 @@ class TrainGANPipeline:
                 generated_images = np.uint8(generated_images*255.0)
                 wandb.log({"examples": [wandb.Image(image, caption=str(idx)) for idx,image in enumerate(generated_images)], "step":step})
                 self.generator.on_epoch_end()
+
+                epoch+=1
+                discriminator_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
+                self.GAN.discrimiator.save_model(discriminator_save_path)
+                generator_save_path = os.path.join(GENERATOR_SAVE_PATH,'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
+                self.GAN.generator.save_model(generator_save_path)
+
+
+
 
             step += 1
