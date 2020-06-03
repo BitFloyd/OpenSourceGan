@@ -129,6 +129,7 @@ class TrainGANPipeline:
 
             wandb.log({'disc_initial_loss':disc_loss, 'step': step})
             if not (step % len(self.generator)):
+                print ("Step {} of {}".format(step,config.NUM_DISCRIMINATOR_STEPS))
                 self.generator.on_epoch_end()
 
             step+=1
@@ -173,6 +174,7 @@ class TrainGANPipeline:
 
 
             if not (step % len(self.generator)):
+                print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
                 self.generator.on_epoch_end()
 
             step+=1
