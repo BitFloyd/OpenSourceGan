@@ -64,7 +64,10 @@ class GANDataGenerator(keras.utils.Sequence):
             bbox = random.choice(bounding_box_list)
             xmin, xmax, ymin, ymax = float(bbox['XMin']), float(bbox['XMax']), float(bbox['YMin']), float(bbox['YMax'])
 
-            image = self.preprocess_frame(imread(filepath))
+            try:
+                image = self.preprocess_frame(imread(filepath))
+            except:
+                continue
 
             image_x = image.shape[1]
             xmin = max(0, int(xmin * image_x))
