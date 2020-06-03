@@ -116,6 +116,7 @@ class TrainGANPipeline:
         self.GAN.set_discriminator_trainable()
         step = 0
 
+        print ("INITIAL DISCRIMINATOR TRAINING...............")
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0,high=0.4,size=(len(generated_images),1))
@@ -130,11 +131,12 @@ class TrainGANPipeline:
             if not (step % len(self.generator)):
                 self.generator.on_epoch_end()
 
+            step+=1
 
     def train_GAN(self):
 
         step = 0
-
+        print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
 
             #Train Discriminator
@@ -173,6 +175,7 @@ class TrainGANPipeline:
             if not (step % len(self.generator)):
                 self.generator.on_epoch_end()
 
+            step+=1
 
 
 
