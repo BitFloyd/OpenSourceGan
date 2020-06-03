@@ -82,14 +82,22 @@ class GANDataGenerator(keras.utils.Sequence):
         items = self.__getitem__(self.index)
         self.index += 1
 
-        #Safety
+        # Safety
         self.index = self.index % self.__len__()
 
         return items
 
     def preprocess_frame(self, frame):
         frame = img_as_float(frame)
-        return frame
+        if (frame.ndim == 2):
+            frame_new = np.zeros((frame.shape[0], frame.shape[1], 3))
+            frame_new[:, :, 0] = frame
+            frame_new[:, :, 1] = frame
+            frame_new[:, :, 2] = frame
+        else:
+            frame_new = frame
+
+        return frame_new
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
@@ -174,8 +182,9 @@ class TrainGANPipeline:
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
 
-            noise_to_generate = np.random.rand((config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
-            label_stack = np.random.uniform(low=0.0,high=0.4,size=(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
+            noise_to_generate = np.random.rand((config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
+            label_stack = np.random.uniform(low=0.0, high=0.4,
+                                            size=(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
 
             adv_loss = self.GAN.adversarial.train_on_batch(noise_to_generate, label_stack)
 
