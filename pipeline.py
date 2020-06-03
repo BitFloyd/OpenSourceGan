@@ -101,9 +101,9 @@ class TrainGANPipeline:
 
         for key in tqdm(keys):
             filename = self.IMAGE_BBOX_DICT[key]['filepath']
-            try:
-                imread(filename)
-            except:
+            if(os.path.exists(filename)):
+                continue
+            else:
                 self.IMAGE_BBOX_DICT.pop(key)
 
         print("{} IMAGES CAN BE READ SUCCESSFULLY AND WILL BE USED FOR TRAINING.............".format(
