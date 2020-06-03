@@ -146,8 +146,7 @@ class TrainGANPipeline:
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
-            print (disc_loss)
-            w_run.log({'disc_initial_loss': disc_loss})
+            wandb.log({'disc_initial_loss': disc_loss[0]})
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
                 self.generator.on_epoch_end()
@@ -175,8 +174,7 @@ class TrainGANPipeline:
                 label_stack[i] = np.abs(1 - label_stack[i])
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
-            print ("DISC_LOSS:",disc_loss)
-            w_run.log({'disc_loss': disc_loss, 'step': step})
+            wandb.log({'disc_loss': disc_loss[0], 'step': step})
 
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
@@ -186,9 +184,7 @@ class TrainGANPipeline:
                                             size=(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
 
             adv_loss = self.GAN.adversarial.train_on_batch(noise_to_generate, label_stack)
-            print("ADV_LOSS:", adv_loss)
-            print (adv_loss)
-            w_run.log({'adv_loss': adv_loss, 'step': step})
+            wandb.log({'adv_loss': adv_loss[0], 'step': step})
 
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
