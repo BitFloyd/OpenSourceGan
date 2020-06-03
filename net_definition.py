@@ -103,7 +103,7 @@ class GAN:
 
         gen = Conv2D(3, 1, activation='sigmoid')(gen)
 
-        self.generator = Model(input=generator_input_noise, output=gen)
+        self.generator = Model(inputs=generator_input_noise, outputs=gen)
 
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         print("GENERATOR SUMMARY")
