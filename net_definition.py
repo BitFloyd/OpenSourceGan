@@ -45,12 +45,7 @@ class GAN:
                                   config.IMAGE_WIDTH,
                                   config.IMAGE_CHANNELS)}
         pret_model = self.switch_model(kwargs)
-        model = Model(inputs=pret_model.input, outputs=pret_model.output)
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("BASE_MODEL SUMMARY")
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        model.summary()
-        return model
+        return pret_model
 
     def initialize_disc(self):
 
