@@ -32,7 +32,6 @@ class GANDataGenerator(keras.utils.Sequence):
     def __len__(self):
         'Denotes the number of batches per epoch'
         num_batches = int(np.floor(self.num_training_images / self.batch_size))
-        print("NUMBER_OF_BATCHS:", num_batches)
         return num_batches
 
     def __getitem__(self, index):
@@ -149,7 +148,7 @@ class TrainGANPipeline:
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
 
             wandb.log({'disc_initial_loss': disc_loss, 'step': step})
-            if not (step % len(self.generator)):
+            if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
                 self.generator.on_epoch_end()
 
@@ -190,7 +189,7 @@ class TrainGANPipeline:
 
             wandb.log({'adv_loss': adv_loss, 'step': step})
 
-            if not (step % len(self.generator)):
+            if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
                 self.generator.on_epoch_end()
 
