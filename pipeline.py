@@ -211,6 +211,9 @@ class TrainGANPipeline:
             process.start()
             time.sleep(5)
 
+        print('GIVE BUFFER A MINUTE......')
+        time.sleep(60)
+
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
 
