@@ -133,6 +133,6 @@ class GAN:
 
     def get_generated_images(self,batch_size=config.BATCH_SIZE):
 
-        input_array = np.random.rand(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM)
+        input_array = np.random.normal(size=(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
         generated_images = self.generator.predict(input_array)
         return generated_images
