@@ -27,8 +27,6 @@ os.makedirs(GENERATOR_SAVE_PATH, exist_ok=True)
 DISCRIMINATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'discriminator')
 os.makedirs(DISCRIMINATOR_SAVE_PATH, exist_ok=True)
 
-batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
-
 
 def batch_populator(queue, generator):
     while 1:
@@ -164,6 +162,7 @@ class TrainGANPipeline:
         epoch = 0
 
         print("STARTING GENERATOR THREADS...............")
+        batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
         # Start generator threads.
         processes = [Process(target=batch_populator, args=(batch_queue, self.generator)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
@@ -200,6 +199,7 @@ class TrainGANPipeline:
 
         step = 0
         epoch = 0
+        batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
         # Start batch threads.
         # Start generator threads.
         print("STARTING GENERATOR THREADS...............")
