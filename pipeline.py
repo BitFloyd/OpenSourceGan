@@ -173,6 +173,7 @@ class TrainGANPipeline:
                      range(config.NUM_BATCH_GEN_THREADS)]
         for process in processes:
             process.start()
+            time.sleep(5)
 
         print('GIVE BUFFER SOME TIME......')
         time.sleep(3*60)
