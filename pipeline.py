@@ -178,7 +178,7 @@ class TrainGANPipeline:
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            discriminator_images, discriminator_labels = batch_queue.get()
+            discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
@@ -220,7 +220,7 @@ class TrainGANPipeline:
 
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            discriminator_images, discriminator_labels = batch_queue.get()
+            discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
             # Add noise to label_stack by flipping very few labels to reduce mode collapse probability
