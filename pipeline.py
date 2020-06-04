@@ -198,7 +198,7 @@ class TrainGANPipeline:
 
             noise_to_generate = np.random.rand(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM)
             label_stack = np.random.uniform(low=0.0, high=0.4,
-                                            size=(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
+                                            size=(config.BATCH_SIZE, 1))
 
             adv_loss = self.GAN.adversarial.train_on_batch(noise_to_generate, label_stack)
             wandb.log({'adv_loss': adv_loss[0], 'step': step})
