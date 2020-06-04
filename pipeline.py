@@ -106,8 +106,8 @@ class GANDataGenerator(keras.utils.Sequence):
         return sampled_images_list, labels
 
     def get_next_item(self):
-        items = self.__getitem__(self.index)
         self.index += 1
+        items = self.__getitem__(self.index)
 
         # Safety
         if (self.index % self.__len__() == 0):
@@ -129,7 +129,7 @@ class GANDataGenerator(keras.utils.Sequence):
 
     def on_epoch_end(self):
         'Updates indexes after each epoch'
-        self.index = 0
+        self.index = -1
         self.indexes = np.arange(len(self.training_dictionary.keys()))
         if self.shuffle == True:
             np.random.shuffle(self.indexes)
