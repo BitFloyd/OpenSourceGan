@@ -1,6 +1,9 @@
 import json
+import multiprocessing
 import os
 import random
+import time
+from queue import Queue
 
 import numpy as np
 import wandb
@@ -9,11 +12,8 @@ from skimage.transform import resize
 from skimage.util.dtype import img_as_float
 from tensorflow import keras
 from tqdm import tqdm
-from queue import Queue
-import config
-import multiprocessing
-import time
 
+import config
 
 w_run = wandb.init(project="OpenSourceGAN")
 
@@ -27,6 +27,7 @@ GENERATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'generator')
 os.makedirs(GENERATOR_SAVE_PATH, exist_ok=True)
 DISCRIMINATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'discriminator')
 os.makedirs(DISCRIMINATOR_SAVE_PATH, exist_ok=True)
+
 
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -98,7 +99,7 @@ class GANDataGenerator(keras.utils.Sequence):
         self.index += 1
 
         # Safety
-        if(self.index % self.__len__()==0):
+        if (self.index % self.__len__() == 0):
             self.on_epoch_end()
 
         return items
@@ -153,29 +154,30 @@ class TrainGANPipeline:
 
     def batch_populator(self):
         while 1:
-            if(self.batch_queue.full()):
+            if (self.batch_queue.full()):
                 time.sleep(0.1)
             else:
-                self. batch_queue.put(self.generator.get_next_item())
+                self.batch_queue.put(self.generator.get_next_item())
 
     def train_Discriminator(self):
         self.GAN.set_discriminator_trainable()
         step = 0
         epoch = 0
-        print("INITIAL DISCRIMINATOR TRAINING...............")
 
-        #Start generator threads.
-        processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in range(config.NUM_BATCH_GEN_THREADS)]
-
+        print("STARTING GENERATOR THREADS...............")
+        # Start generator threads.
+        processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in
+                     range(config.NUM_BATCH_GEN_THREADS)]
         for process in processes:
             process.start()
+
+        print('GIVE BUFFER SOME TIME......')
+        time.sleep(3*60)
 
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-
-            while(self.batch_queue.empty()):
-                time.sleep(0.001)
+            print('BATCH_QUEUE_LENGTH:', self.batch_queue.qsize())
             discriminator_images, discriminator_labels = self.batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
@@ -185,8 +187,8 @@ class TrainGANPipeline:
 
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
-                epoch +=1
-                disc_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH,'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
+                epoch += 1
+                disc_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.discrimiator.save(disc_save_path)
             step += 1
 
@@ -199,7 +201,7 @@ class TrainGANPipeline:
         epoch = 0
         print("TRAINING THE GAN...............")
 
-        #Start batch threads.
+        # Start batch threads.
         # Start generator threads.
         processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
@@ -216,8 +218,6 @@ class TrainGANPipeline:
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
 
-            while (self.batch_queue.empty()):
-                time.sleep(0.001)
             discriminator_images, discriminator_labels = self.batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
@@ -241,16 +241,16 @@ class TrainGANPipeline:
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
                 generated_images = self.GAN.get_generated_images(10)
-                generated_images = np.uint8(generated_images*255.0)
-                wandb.log({"examples": [wandb.Image(image, caption=str(idx)) for idx,image in enumerate(generated_images)], "step":step})
-                epoch+=1
-                discriminator_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
+                generated_images = np.uint8(generated_images * 255.0)
+                wandb.log(
+                    {"examples": [wandb.Image(image, caption=str(idx)) for idx, image in enumerate(generated_images)],
+                     "step": step})
+                epoch += 1
+                discriminator_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH,
+                                                       'disc-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.discrimiator.save(discriminator_save_path)
-                generator_save_path = os.path.join(GENERATOR_SAVE_PATH,'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
+                generator_save_path = os.path.join(GENERATOR_SAVE_PATH, 'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.generator.save(generator_save_path)
-
-
-
 
             step += 1
 
