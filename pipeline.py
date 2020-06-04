@@ -152,13 +152,13 @@ class TrainGANPipeline:
 
         self.batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
 
-    def batch_populator(self):
+    def batch_populator(self,queue):
         while 1:
-            if (self.batch_queue.full()):
+            if (queue.full()):
                 time.sleep(0.1)
             else:
-                self.batch_queue.put(self.generator.get_next_item())
-                print ("QUEUE IS AT....",self.batch_queue.qsize())
+                queue.put(self.generator.get_next_item())
+                print ("QUEUE IS AT....",queue.qsize())
 
     def train_Discriminator(self):
         self.GAN.set_discriminator_trainable()
@@ -167,7 +167,7 @@ class TrainGANPipeline:
 
         print("STARTING GENERATOR THREADS...............")
         # Start generator threads.
-        processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in
+        processes = [multiprocessing.Process(target=self.batch_populator, args=(self.batch_queue,)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
         for process in processes:
             process.start()
