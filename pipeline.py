@@ -158,6 +158,7 @@ class TrainGANPipeline:
                 time.sleep(0.1)
             else:
                 self.batch_queue.put(self.generator.get_next_item())
+                print ("QUEUE IS AT....",self.batch_queue.qsize())
 
     def train_Discriminator(self):
         self.GAN.set_discriminator_trainable()
@@ -192,6 +193,7 @@ class TrainGANPipeline:
                 self.GAN.discrimiator.save(disc_save_path)
             step += 1
 
+        print ("STOPPING GENRATOR THREADS.........")
         for process in processes:
             process.terminate()
 
@@ -199,16 +201,16 @@ class TrainGANPipeline:
 
         step = 0
         epoch = 0
-        print("TRAINING THE GAN...............")
-
         # Start batch threads.
         # Start generator threads.
+        print("STARTING GENERATOR THREADS...............")
         processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
 
         for process in processes:
             process.start()
 
+        print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
 
             # Train Discriminator
@@ -254,5 +256,6 @@ class TrainGANPipeline:
 
             step += 1
 
+        print ("STOPPING GENRATOR THREADS.........")
         for process in processes:
             process.terminate()
