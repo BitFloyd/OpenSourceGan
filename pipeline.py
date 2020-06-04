@@ -178,12 +178,11 @@ class TrainGANPipeline:
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            discriminator_images, discriminator_labels = batch_queue.get_nowait()
+            discriminator_images, discriminator_labels = batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
-            batch_queue.task_done()
             wandb.log({'disc_initial_loss': disc_loss[0]})
 
             if not (step % self.batches_per_epoch):
@@ -208,7 +207,9 @@ class TrainGANPipeline:
                      range(config.NUM_BATCH_GEN_THREADS)]
 
         for process in processes:
+            process.daemon = True
             process.start()
+            time.sleep(5)
 
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
@@ -219,7 +220,6 @@ class TrainGANPipeline:
 
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-
             discriminator_images, discriminator_labels = batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
