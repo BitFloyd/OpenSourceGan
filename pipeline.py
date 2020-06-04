@@ -1,7 +1,6 @@
 import json
-import multiprocessing
+from multiprocessing import Queue,Process
 import os
-import queue
 import random
 import time
 
@@ -28,7 +27,7 @@ os.makedirs(GENERATOR_SAVE_PATH, exist_ok=True)
 DISCRIMINATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'discriminator')
 os.makedirs(DISCRIMINATOR_SAVE_PATH, exist_ok=True)
 
-batch_queue = queue.Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
+batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
 
 
 def batch_populator(queue, generator):
@@ -36,9 +35,7 @@ def batch_populator(queue, generator):
         if (queue.full()):
             time.sleep(1)
         else:
-            queue.put(generator.get_next_item())
-            print (queue)
-            print (queue.qsize())
+            queue.put(generator.get_next_item(), blocking=True)
 
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -168,9 +165,10 @@ class TrainGANPipeline:
 
         print("STARTING GENERATOR THREADS...............")
         # Start generator threads.
-        processes = [multiprocessing.Process(target=batch_populator, args=(batch_queue, self.generator)) for i in
+        processes = [Process(target=batch_populator, args=(batch_queue, self.generator)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
         for process in processes:
+            process.daemon = True
             process.start()
             time.sleep(5)
 
@@ -180,8 +178,7 @@ class TrainGANPipeline:
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            print('BATCH_QUEUE_LENGTH:', batch_queue.qsize())
-            discriminator_images, discriminator_labels = batch_queue.get()
+            discriminator_images, discriminator_labels = batch_queue.get_nowait()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
@@ -207,7 +204,7 @@ class TrainGANPipeline:
         # Start batch threads.
         # Start generator threads.
         print("STARTING GENERATOR THREADS...............")
-        processes = [multiprocessing.Process(target=batch_populator, args=(batch_queue, self.generator)) for i in
+        processes = [Process(target=batch_populator, args=(batch_queue, self.generator)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
 
         for process in processes:
