@@ -35,7 +35,7 @@ def batch_populator(queue, generator):
         if (queue.full()):
             time.sleep(1)
         else:
-            queue.put(generator.get_next_item(), blocking=True)
+            queue.put(generator.get_next_item())
 
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
