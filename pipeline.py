@@ -29,6 +29,17 @@ DISCRIMINATOR_SAVE_PATH = os.path.join(GAN_SAVE_DIR, 'discriminator')
 os.makedirs(DISCRIMINATOR_SAVE_PATH, exist_ok=True)
 
 
+batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
+
+
+def batch_populator(queue,generator):
+    while 1:
+        if (queue.full()):
+            time.sleep(0.1)
+        else:
+            queue.put(generator.get_next_item())
+            print("QUEUE IS AT....", queue.qsize())
+
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
 
@@ -150,15 +161,6 @@ class TrainGANPipeline:
         self.generator = GANDataGenerator(self.IMAGE_BBOX_DICT, batch_size=config.BATCH_SIZE)
         self.batches_per_epoch = len(self.generator)
 
-        self.batch_queue = Queue(maxsize=config.MAX_QUEUE_BATCH_SIZE)
-
-    def batch_populator(self,queue):
-        while 1:
-            if (queue.full()):
-                time.sleep(0.1)
-            else:
-                queue.put(self.generator.get_next_item())
-                print ("QUEUE IS AT....",queue.qsize())
 
     def train_Discriminator(self):
         self.GAN.set_discriminator_trainable()
@@ -167,7 +169,7 @@ class TrainGANPipeline:
 
         print("STARTING GENERATOR THREADS...............")
         # Start generator threads.
-        processes = [multiprocessing.Process(target=self.batch_populator, args=(self.batch_queue,)) for i in
+        processes = [multiprocessing.Process(target=batch_populator, args=(batch_queue,self.generator)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
         for process in processes:
             process.start()
@@ -178,8 +180,8 @@ class TrainGANPipeline:
         while step < config.NUM_DISCRIMINATOR_STEPS:
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            print('BATCH_QUEUE_LENGTH:', self.batch_queue.qsize())
-            discriminator_images, discriminator_labels = self.batch_queue.get()
+            print('BATCH_QUEUE_LENGTH:', batch_queue.qsize())
+            discriminator_images, discriminator_labels = batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
@@ -204,7 +206,7 @@ class TrainGANPipeline:
         # Start batch threads.
         # Start generator threads.
         print("STARTING GENERATOR THREADS...............")
-        processes = [multiprocessing.Process(target=self.batch_populator, args=()) for i in
+        processes = [multiprocessing.Process(target=batch_populator, args=(batch_queue,self.generator)) for i in
                      range(config.NUM_BATCH_GEN_THREADS)]
 
         for process in processes:
@@ -220,7 +222,7 @@ class TrainGANPipeline:
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
 
-            discriminator_images, discriminator_labels = self.batch_queue.get()
+            discriminator_images, discriminator_labels = batch_queue.get()
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
             # Add noise to label_stack by flipping very few labels to reduce mode collapse probability
