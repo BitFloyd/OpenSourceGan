@@ -92,18 +92,20 @@ class GANDataGenerator(keras.utils.Sequence):
             sampled_images_list.append(sampled_image)
 
         sampled_images_list = np.array(sampled_images_list)
-        while (len(sampled_images_list) < self.batch_size):
-            index = np.random.randint(0, len(sampled_images_list))
-            sampled_images_list = np.vstack((sampled_images_list, sampled_images_list[index]))
+
+        if(len(sampled_images_list) < self.batch_size or sampled_images_list.ndim<4):
+            print ("INVALID BATCH AT BATCH INDEX {}".format(self.index))
+            return None
 
         labels = np.random.uniform(low=0.6, high=0.99, size=(len(sampled_images_list), 1))
 
         return sampled_images_list, labels
 
     def get_next_item(self):
-        self.index += 1
-        items = self.__getitem__(self.index)
-
+        items = None
+        while not items:
+            self.index += 1
+            items = self.__getitem__(self.index)
         # Safety
         if (self.index % self.__len__() == 0):
             self.on_epoch_end()
@@ -175,9 +177,14 @@ class TrainGANPipeline:
         time.sleep(60)
 
         while step < config.NUM_DISCRIMINATOR_STEPS:
+            batch_received = False
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+            while not batch_received:
+                discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+                time.sleep(5)
+                batch_received=True
+
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
@@ -220,10 +227,13 @@ class TrainGANPipeline:
             # Train Discriminator
 
             self.GAN.set_discriminator_trainable()
-
+            batch_received = False
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
-            discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+            while not batch_received:
+                discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+                time.sleep(5)
+
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
             # Add noise to label_stack by flipping very few labels to reduce mode collapse probability
