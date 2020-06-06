@@ -276,8 +276,7 @@ class TrainGANPipeline:
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
 
-            if(not step%100):
-                wandb.log({'disc_loss': disc_loss[0], 'step': step, 'disc_lr': self.GAN.disc_lr, 'adv_lr': self.GAN.adv_lr})
+
 
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
@@ -287,8 +286,10 @@ class TrainGANPipeline:
                                             size=(config.BATCH_SIZE, 1))
 
             adv_loss = self.GAN.adversarial.train_on_batch(noise_to_generate, label_stack)
-            wandb.log({'adv_loss': adv_loss[0], 'step': step})
-
+            if (not step % 100):
+                wandb.log(
+                    {'adv_loss': adv_loss[0], 'disc_loss': disc_loss[0], 'step': step, 'disc_lr': self.GAN.disc_lr,
+                     'adv_lr': self.GAN.adv_lr})
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_TRAINING_STEPS))
                 generated_images = self.GAN.get_generated_images(10)
