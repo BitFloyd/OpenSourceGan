@@ -178,6 +178,7 @@ class TrainGANPipeline:
         time.sleep(5*60)
 
         while step < config.NUM_DISCRIMINATOR_STEPS:
+            print ("STEP {}/{}".format(step,config.NUM_DISCRIMINATOR_STEPS))
             batch_received = False
             retries = 0
             retry_limit_hit = False
@@ -234,12 +235,12 @@ class TrainGANPipeline:
             process.start()
             time.sleep(5)
 
-        print('GIVE BUFFER A MINUTE......')
-        time.sleep(60)
+        print('GIVE BUFFER 5 MINUTE......')
+        time.sleep(5*60)
 
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
-
+            print("STEP {}/{}".format(step, config.NUM_TRAINING_STEPS))
             # Train Discriminator
 
             self.GAN.set_discriminator_trainable()
