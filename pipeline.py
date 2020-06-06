@@ -174,24 +174,36 @@ class TrainGANPipeline:
             process.start()
             time.sleep(5)
 
-        print('GIVE BUFFER A MINUTE......')
-        time.sleep(60)
+        print('GIVE BUFFER 5 MINUTES......')
+        time.sleep(5*60)
 
         while step < config.NUM_DISCRIMINATOR_STEPS:
             batch_received = False
+            retries = 0
+            retry_limit_hit = False
             generated_images = self.GAN.get_generated_images(batch_size=32)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
+
             while not batch_received:
+                retries+=1
+                if(retries>=config.BATCH_RETRY_LIMIT):
+                    retry_limit_hit = True
+                    break
+
                 discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
                 time.sleep(5)
                 batch_received = True
+
+            if(retry_limit_hit):
+                print ("RETY LIMIT REACHED....")
+                print ("STOPPING THE DISC TRAINING.............")
+                break
 
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
-            wandb.log({'disc_initial_loss': disc_loss[0]})
-            wandb.log({'disc_initial_lr': self.GAN.disc_lr})
+            wandb.log({'disc_initial_loss': disc_loss[0],'disc_initial_lr': self.GAN.disc_lr,'step':step})
 
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
@@ -199,6 +211,7 @@ class TrainGANPipeline:
                 disc_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.discrimiator.save(disc_save_path)
                 self.GAN.update_disc_learning_rate()
+
             step += 1
 
         print("STOPPING GENRATOR THREADS.........")
@@ -231,11 +244,21 @@ class TrainGANPipeline:
 
             self.GAN.set_discriminator_trainable()
             batch_received = False
+            retries = 0
+            retry_limit_hit = False
             generated_images = self.GAN.get_generated_images(batch_size=config.BATCH_SIZE)
             generated_labels = np.random.uniform(low=0.0, high=0.4, size=(len(generated_images), 1))
             while not batch_received:
+                retries += 1
+                if (retries >= config.BATCH_RETRY_LIMIT):
+                    retry_limit_hit = True
+                    break
                 discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
                 time.sleep(5)
+            if(retry_limit_hit):
+                print ("RETY LIMIT REACHED....")
+                print ("STOPPING THE GAN TRAINING.............")
+                break
 
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
@@ -244,9 +267,7 @@ class TrainGANPipeline:
                 label_stack[i] = np.abs(1 - label_stack[i])
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
-            wandb.log({'disc_loss': disc_loss[0], 'step': step})
-            wandb.log({'disc_lr': self.GAN.disc_lr})
-            wandb.log({'disc_lr': self.GAN.adv_lr})
+            wandb.log({'disc_loss': disc_loss[0], 'step': step, 'disc_lr': self.GAN.disc_lr,'adv_lr': self.GAN.adv_lr})
 
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
