@@ -1,6 +1,6 @@
 import os
 
-INTERESTED_CLASS = 'Human face'
+INTERESTED_CLASS = 'Furniture'
 HOME = os.getenv('PROJECT_BASE_PATH', '/Users/sebyjacob/My_Projects/OpenSourceGAN')
 IMAGE_METADATA_FOLDER = os.path.join(HOME, 'OpenImagesV6/image_metadata')
 IMAGE_CLASS_DESCRIPTIONS_FILE = os.path.join(IMAGE_METADATA_FOLDER, 'oidv6-class-descriptions.csv')
@@ -35,5 +35,5 @@ IMAGE_WIDTH = 256
 IMAGE_CHANNELS = 3
 BATCH_SIZE = 32
 
-NUM_DISCRIMINATOR_STEPS = 1e5
+NUM_DISCRIMINATOR_STEPS = 2e3
 NUM_TRAINING_STEPS = 1e10
