@@ -6,7 +6,7 @@ from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.applications.xception import Xception
 from tensorflow.keras.layers import (
     Input, Dense, Conv2D, BatchNormalization, MaxPooling2D, Dropout, GaussianNoise,
-    Flatten, Reshape, Activation, UpSampling2D)
+    Flatten, Reshape, Activation, UpSampling2D, LeakyReLU)
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
@@ -75,13 +75,13 @@ class GAN:
     def upsample_bank(self, filters, tensor, kernel_shape, upsample_factor):
         tensor = Conv2D(filters, kernel_shape, padding='same')(tensor)
         tensor = BatchNormalization()(tensor)
-        tensor = Activation('relu')(tensor)
+        tensor = LeakyReLU(0.3)(tensor)
         tensor = Conv2D(filters, kernel_shape, padding='same')(tensor)
         tensor = BatchNormalization()(tensor)
-        tensor = Activation('relu')(tensor)
+        tensor = LeakyReLU(0.3)(tensor)
         tensor = Conv2D(filters, kernel_shape, padding='same')(tensor)
         tensor = BatchNormalization()(tensor)
-        tensor = Activation('relu')(tensor)
+        tensor = LeakyReLU(0.3)(tensor)
         tensor = UpSampling2D(upsample_factor)(tensor)
 
         return tensor
@@ -90,7 +90,7 @@ class GAN:
         generator_input_noise = Input(shape=config.INPUT_GENERATOR_NOISE_DIM, )
         gen = Dense(8 * 8 * 256)(generator_input_noise)
         gen = BatchNormalization(momentum=0.0)(gen)
-        gen = Activation('relu')(gen)
+        gen = LeakyReLU(0.3)(gen)
         gen = Reshape((8, 8, 256))(gen)
         gen = Dropout(0.4)(gen)  # Shape = 8,8,256
 
@@ -101,9 +101,7 @@ class GAN:
         gen = GaussianNoise(0.02)(gen)
         gen = self.upsample_bank(filters=32, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 64,64,32
         gen = GaussianNoise(0.01)(gen)
-        gen = self.upsample_bank(filters=16, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 128,128,16
-        gen = GaussianNoise(0.01)(gen)
-        gen = self.upsample_bank(filters=8, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 256,256,8
+        gen = self.upsample_bank(filters=8, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 128,128,16
 
         gen = Conv2D(3, 1, activation='sigmoid')(gen)  # Shape = 256,256,3
 

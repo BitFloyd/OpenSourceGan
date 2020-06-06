@@ -172,10 +172,10 @@ class TrainGANPipeline:
         for process in processes:
             process.daemon = True
             process.start()
-            time.sleep(5)
+            time.sleep(1)
 
-        print('GIVE BUFFER 5 MINUTES......')
-        time.sleep(5 * 60)
+        print('GIVE BUFFER 3 MINUTES......')
+        time.sleep(3 * 60)
 
         while step < config.NUM_DISCRIMINATOR_STEPS:
             print("STEP {}/{}".format(step, config.NUM_DISCRIMINATOR_STEPS))
@@ -192,7 +192,7 @@ class TrainGANPipeline:
                     break
 
                 discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
-                time.sleep(5)
+                time.sleep(2)
                 batch_received = True
 
             if (retry_limit_hit):
@@ -234,10 +234,10 @@ class TrainGANPipeline:
         for process in processes:
             process.daemon = True
             process.start()
-            time.sleep(5)
+            time.sleep(1)
 
-        print('GIVE BUFFER 5 MINUTE......')
-        time.sleep(5 * 60)
+        print('GIVE BUFFER 3 MINUTES......')
+        time.sleep(3 * 60)
 
         print("TRAINING THE GAN...............")
         while step < config.NUM_TRAINING_STEPS:
@@ -255,8 +255,10 @@ class TrainGANPipeline:
                 if (retries >= config.BATCH_RETRY_LIMIT):
                     retry_limit_hit = True
                     break
+
                 discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
-                time.sleep(5)
+                time.sleep(2)
+
             if (retry_limit_hit):
                 print("RETY LIMIT REACHED....")
                 print("STOPPING THE GAN TRAINING.............")
