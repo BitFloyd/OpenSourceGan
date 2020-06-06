@@ -12,7 +12,7 @@ displayNameToLabelNameDict = utils.get_displayNameToLabelNameDict()
 labelNameToDisplayNameDict = {value: key for key, value in displayNameToLabelNameDict.items()}
 
 # TODO Make this a script argument.
-interested_class = 'Furniture'
+interested_class = config.INTERESTED_CLASS
 
 # Check if the intersted_class is in our dict. If not, suggest alternates and quit.
 if (interested_class not in displayNameToLabelNameDict):

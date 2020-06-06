@@ -16,7 +16,7 @@ import config
 
 w_run = wandb.init(project="OpenSourceGAN")
 
-interested_class = 'Furniture'
+interested_class = config.INTERESTED_CLASS
 GAN_SAVE_DIR = os.path.join(config.HOME, 'GANS', interested_class)
 
 if (not os.path.exists(GAN_SAVE_DIR)):
