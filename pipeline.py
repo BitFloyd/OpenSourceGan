@@ -262,7 +262,7 @@ class TrainGANPipeline:
                     discriminator_images, discriminator_labels = batch_queue.get(timeout=15)
                 except:
                     continue
-
+                batch_received=True
             if (retry_limit_hit):
                 print("RETY LIMIT REACHED....")
                 print("STOPPING THE GAN TRAINING.............")
