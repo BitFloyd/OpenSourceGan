@@ -1,3 +1,5 @@
+import numpy as np
+import tensorflow.keras.backend as K
 from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
 from tensorflow.keras.applications.inception_v3 import InceptionV3
 from tensorflow.keras.applications.resnet50 import ResNet50
@@ -5,9 +7,9 @@ from tensorflow.keras.applications.xception import Xception
 from tensorflow.keras.layers import (
     Input, Dense, Conv2D, BatchNormalization, MaxPooling2D, Dropout, GaussianNoise,
     Flatten, Reshape, Activation, UpSampling2D)
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.keras.optimizers import RMSprop
-import numpy as np
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+
 import config
 
 
@@ -18,6 +20,8 @@ class GAN:
         self.generator = None
         self.full_model = None
 
+        self.adv_lr = config.INITIAL_ADVERSARIAL_LEARNING_RATE
+        self.disc_lr = config.INITIAL_DISCRIMINATOR_LEARNING_RATE
         self.initialize_disc()
         self.initialize_gen()
         self.initialize_adversarial()
@@ -57,10 +61,10 @@ class GAN:
         mod_out = Dense(1, activation='sigmoid')(mod_out)
 
         self.discrimiator = Model(inputs=pt_model.input, outputs=mod_out)
-        adam = RMSprop(lr=config.INITIAL_DISCRIMINATOR_LEARNING_RATE, clipvalue=config.DISCRIMINATOR_CLIP_VALUE,
-                       decay=config.DISCRIMINATOR_DECAY)
+        self.optimizer_disc = Adam(lr=self.disc_lr, clipvalue=config.DISCRIMINATOR_CLIP_VALUE,
+                                   decay=config.DISCRIMINATOR_DECAY)
 
-        self.discrimiator.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
+        self.discrimiator.compile(optimizer=self.optimizer_disc, loss='binary_crossentropy', metrics=['accuracy'])
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         print("DISCRIMINATOR SUMMARY")
         print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
@@ -101,7 +105,7 @@ class GAN:
         gen = GaussianNoise(0.01)(gen)
         gen = self.upsample_bank(filters=8, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 256,256,8
 
-        gen = Conv2D(3, 1, activation='sigmoid')(gen) #Shape = 256,256,3
+        gen = Conv2D(3, 1, activation='sigmoid')(gen)  # Shape = 256,256,3
 
         self.generator = Model(inputs=generator_input_noise, outputs=gen)
 
@@ -115,10 +119,10 @@ class GAN:
     def initialize_adversarial(self):
 
         adversarial = self.discrimiator(self.generator.output)
-        self.adversarial = Model(inputs=self.generator.input,outputs=adversarial)
-        optimizer = RMSprop(lr=config.INITIAL_ADVERSARIAL_LEARNING_RATE, clipvalue=config.ADVERSARIAL_CLIP_VALUE,
-                            decay=config.ADVERSARIAL_DECAY)
-        self.adversarial.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+        self.adversarial = Model(inputs=self.generator.input, outputs=adversarial)
+        self.optimizer_adv = Adam(lr=self.adv_lr, clipvalue=config.ADVERSARIAL_CLIP_VALUE,
+                                  decay=config.ADVERSARIAL_DECAY)
+        self.adversarial.compile(optimizer=self.optimizer_adv, loss='binary_crossentropy', metrics=['accuracy'])
         return self.adversarial
 
     def set_discriminator_trainable(self):
@@ -131,8 +135,20 @@ class GAN:
         for layer in self.discrimiator.layers:
             layer.trainable = False
 
-    def get_generated_images(self,batch_size=config.BATCH_SIZE):
+    def get_generated_images(self, batch_size=config.BATCH_SIZE):
 
-        input_array = np.random.normal(size=(config.BATCH_SIZE,config.INPUT_GENERATOR_NOISE_DIM))
+        input_array = np.random.normal(size=(config.BATCH_SIZE, config.INPUT_GENERATOR_NOISE_DIM))
         generated_images = self.generator.predict(input_array)
         return generated_images
+
+    def update_disc_learning_rate(self, decay_factor=0.99):
+        self.disc_lr = self.disc_lr * decay_factor
+        K.set_value(self.discrimiator.optimizer.learning_rate, self.disc_lr)
+
+        return True
+
+    def update_adv_learning_rate(self, decay_factor=0.99):
+        self.adv_lr = self.adv_lr * decay_factor
+        K.set_value(self.adversarial.optimizer.learning_rate, self.adv_lr)
+
+        return True

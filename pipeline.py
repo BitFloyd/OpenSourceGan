@@ -196,6 +196,7 @@ class TrainGANPipeline:
                 epoch += 1
                 disc_save_path = os.path.join(DISCRIMINATOR_SAVE_PATH, 'disc-init-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.discrimiator.save(disc_save_path)
+                self.GAN.update_disc_learning_rate()
             step += 1
 
         print("STOPPING GENRATOR THREADS.........")
@@ -266,6 +267,7 @@ class TrainGANPipeline:
                 self.GAN.discrimiator.save(discriminator_save_path)
                 generator_save_path = os.path.join(GENERATOR_SAVE_PATH, 'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.generator.save(generator_save_path)
+                self.GAN.update_adv_learning_rate()
 
             step += 1
 
