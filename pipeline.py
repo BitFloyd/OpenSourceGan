@@ -190,7 +190,11 @@ class TrainGANPipeline:
                 if (retries >= config.BATCH_RETRY_LIMIT):
                     retry_limit_hit = True
                     break
-                discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+                try:
+                    discriminator_images, discriminator_labels = batch_queue.get(timeout=15)
+                except:
+                    continue
+
                 batch_received = True
 
             if (retry_limit_hit):
@@ -254,7 +258,10 @@ class TrainGANPipeline:
                     retry_limit_hit = True
                     break
 
-                discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
+                try:
+                    discriminator_images, discriminator_labels = batch_queue.get(timeout=15)
+                except:
+                    continue
 
             if (retry_limit_hit):
                 print("RETY LIMIT REACHED....")
