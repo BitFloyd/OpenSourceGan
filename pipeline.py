@@ -1,8 +1,8 @@
 import json
-from multiprocessing import Queue,Process
 import os
 import random
 import time
+from multiprocessing import Queue, Process
 
 import numpy as np
 import wandb
@@ -34,6 +34,7 @@ def batch_populator(queue, generator):
             time.sleep(1)
         else:
             queue.put(generator.get_next_item())
+
 
 class GANDataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
@@ -93,8 +94,8 @@ class GANDataGenerator(keras.utils.Sequence):
 
         sampled_images_list = np.array(sampled_images_list)
 
-        if(len(sampled_images_list) < self.batch_size or sampled_images_list.ndim<4):
-            print ("INVALID BATCH AT BATCH INDEX {}".format(self.index))
+        if (len(sampled_images_list) < self.batch_size or sampled_images_list.ndim < 4):
+            print("INVALID BATCH AT BATCH INDEX {}".format(self.index))
             return None
 
         labels = np.random.uniform(low=0.6, high=0.99, size=(len(sampled_images_list), 1))
@@ -183,13 +184,14 @@ class TrainGANPipeline:
             while not batch_received:
                 discriminator_images, discriminator_labels = batch_queue.get(timeout=10)
                 time.sleep(5)
-                batch_received=True
+                batch_received = True
 
             image_stack = np.vstack((generated_images, discriminator_images))
             label_stack = np.vstack((generated_labels, discriminator_labels))
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
             wandb.log({'disc_initial_loss': disc_loss[0]})
+            wandb.log({'disc_initial_lr': self.GAN.disc_lr})
 
             if not (step % self.batches_per_epoch):
                 print("Step {} of {}".format(step, config.NUM_DISCRIMINATOR_STEPS))
@@ -243,6 +245,8 @@ class TrainGANPipeline:
 
             disc_loss = self.GAN.discrimiator.train_on_batch(image_stack, label_stack)
             wandb.log({'disc_loss': disc_loss[0], 'step': step})
+            wandb.log({'disc_lr': self.GAN.disc_lr})
+            wandb.log({'disc_lr': self.GAN.adv_lr})
 
             # Freeze Discriminator and train the adversarial model
             self.GAN.freeze_discriminator_layers()
