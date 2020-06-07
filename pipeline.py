@@ -88,6 +88,9 @@ class GANDataGenerator(keras.utils.Sequence):
             ymin = max(0, int(ymin * image_y))
             ymax = min(image_y, int(ymax * image_y))
 
+            bbox_area = (xmax-xmin)*(ymax-ymin)
+            if(bbox_area < config.MIN_ACCEPTABLE_IMAGE_AREA):
+                continue
             sampled_image = image[ymin:ymax, xmin:xmax, :]
             sampled_image = resize(sampled_image, output_shape=(config.IMAGE_HEIGHT, config.IMAGE_WIDTH))
             sampled_images_list.append(sampled_image)
