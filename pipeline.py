@@ -307,6 +307,7 @@ class TrainGANPipeline:
                 generator_save_path = os.path.join(GENERATOR_SAVE_PATH, 'gen-gan-{epoch:04d}.ckpt'.format(epoch=epoch))
                 self.GAN.generator.save(generator_save_path)
                 self.GAN.update_adv_learning_rate()
+                self.GAN.update_disc_learning_rate()
 
             step += 1
 
