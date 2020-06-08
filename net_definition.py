@@ -94,13 +94,13 @@ class GAN:
         gen = Reshape((8, 8, 256))(gen)
         gen = Dropout(0.4)(gen)  # Shape = 8,8,256
 
-        gen = GaussianNoise(0.02)(gen)
+        # gen = GaussianNoise(0.02)(gen)
         gen = self.upsample_bank(filters=128, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 16,16,128
-        gen = GaussianNoise(0.02)(gen)
+        # gen = GaussianNoise(0.02)(gen)
         gen = self.upsample_bank(filters=64, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 32,32,64
-        gen = GaussianNoise(0.02)(gen)
+        # gen = GaussianNoise(0.02)(gen)
         gen = self.upsample_bank(filters=32, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 64,64,32
-        gen = GaussianNoise(0.01)(gen)
+        # gen = GaussianNoise(0.01)(gen)
         gen = self.upsample_bank(filters=8, tensor=gen, kernel_shape=3, upsample_factor=2)  # Shape = 128,128,16
 
         gen = Conv2D(3, 1, activation='sigmoid')(gen)  # Shape = 256,256,3

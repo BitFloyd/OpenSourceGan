@@ -110,10 +110,8 @@ class GANDataGenerator(keras.utils.Sequence):
         while not items:
             self.index += 1
             items = self.__getitem__(self.index)
-        # Safety
-        if (self.index % self.__len__() == 0):
-            self.on_epoch_end()
-
+            if (self.index % self.__len__() == 0):
+                self.on_epoch_end()
         return items
 
     def preprocess_frame(self, frame):
