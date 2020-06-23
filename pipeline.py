@@ -9,6 +9,7 @@ import wandb
 from skimage.io import imread
 from skimage.transform import resize
 from skimage.util.dtype import img_as_float
+from tensorflow import keras
 from tqdm import tqdm
 
 import config
@@ -35,7 +36,8 @@ def batch_populator(queue, generator):
             queue.put(generator.get_next_item())
 
 
-class GANDataGenerator:
+class GANDataGenerator(keras.utils.Sequence):
+    'Generates data for Keras'
 
     def __init__(self, training_dictionary, batch_size=32, shuffle=True):
         """
@@ -53,9 +55,9 @@ class GANDataGenerator:
         num_batches = int(np.floor(self.num_training_images / self.batch_size))
         return num_batches
 
-    def get_item(self):
+    def __getitem__(self, index):
         'Generate one batch of data'
-        indexes = self.indexes[self.index * self.batch_size:(self.index + 1) * self.batch_size]
+        indexes = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
 
         # Get relevant images for the indexes
         sampled_images_list = []
@@ -107,9 +109,9 @@ class GANDataGenerator:
         items = None
         while not items:
             self.index += 1
-            items = self.get_item()
-            if (self.index % len(self) == 0):
+            if (self.index >= self.__len__()):
                 self.on_epoch_end()
+            items = self.__getitem__(self.index)
         return items
 
     def preprocess_frame(self, frame):
